@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Times Table Adventure!</title>
+  <style>
+    * { box-sizing: border-box; font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; }
+    body {
+      background: #f0f9ff;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px 16px;
+    }
+    .card {
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      padding: 28px;
+      max-width: 540px;
+      width: 100%;
+      text-align: center;
+    }
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #0369a1;
+    }
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .pause-btn {
+      font-size: 0.95rem;
+      padding: 6px 14px;
+      background: #e0f2fe;
+      color: #0369a1;
+      border: 2px solid #bae6fd;
+      border-radius: 8px;
+    }
+    .pause-btn:hover {
+      background: #bae6fd;
+    }
+    .timer-container {
+      width: 100%;
+      height: 14px;
+      background: #e2e8f0;
+      border-radius: 7px;
+      overflow: hidden;
+      margin-bottom: 20px;
+    }
+    .timer-bar {
+      height: 100%;
+      width: 100%;
+      background: #22c55e;
+      transition: width 0.05s linear, background-color 0.3s;
+    }
+    .question {
+      font-size: 2.5rem;
+      color: #0f172a;
+      margin: 8px 0;
+    }
+    .grid-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 160px;
+      max-height: 220px;
+      margin: 16px 0;
+      overflow: auto;
+      padding: 10px;
+      background: #fafafa;
+      border-radius: 12px;
+      border: 2px dashed #e2e8f0;
+    }
+    .box-grid {
+      display: grid;
+      gap: 5px;
+      justify-content: center;
+    }
+    .box {
+      width: 18px;
+      height: 18px;
+      background-color: #ef4444;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+    }
+    .input-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+    input[type="number"] {
+      width: 120px;
+      font-size: 1.8rem;
+      text-align: center;
+      padding: 6px;
+      border: 3px solid #cbd5e1;
+      border-radius: 12px;
+      outline: none;
+    }
+    input[type="number"]:focus {
+      border-color: #3b82f6;
+    }
+    button {
+      font-size: 1.3rem;
+      padding: 10px 22px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: transform 0.1s, background 0.2s;
+    }
+    button:hover { background: #2563eb; }
+    button:active { transform: scale(0.96); }
+    .feedback {
+      min-height: 28px;
+      margin-top: 14px;
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+    .correct { color: #16a34a; }
+    .wrong { color: #dc2626; }
+
+    /* Wrong Questions Section */
+    .wrong-review-container {
+      max-width: 540px;
+      width: 100%;
+      margin-top: 20px;
+      background: #fef2f2;
+      border: 2px solid #fecaca;
+      border-radius: 16px;
+      padding: 16px 20px;
+      display: none;
+      text-align: center;
+    }
+    .wrong-review-title {
+      color: #dc2626;
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .wrong-items-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+    .wrong-badge {
+      background: white;
+      color: #dc2626;
+      border: 1.5px solid #fca5a5;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: bold;
+      box-shadow: 0 1px 3px rgba(220, 38, 38, 0.1);
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <span>⭐ Score: <span id="score">0</span></span>
+    <div class="header-controls">
+      <span>Left: <span id="remainingCount">0</span></span>
+      <span>Streak: <span id="streak">0</span> 🔥</span>
+      <button type="button" class="pause-btn" id="pauseBtn" onclick="togglePause()">⏸ Pause</button>
+    </div>
+  </div>
+
+  <div class="timer-container">
+    <div class="timer-bar" id="timerBar"></div>
+  </div>
+
+  <div class="question" id="questionText">Ready?</div>
+
+  <div class="grid-wrapper">
+    <div class="box-grid" id="boxGrid"></div>
+  </div>
+
+  <form id="answerForm" class="input-row" onsubmit="handleAnswer(event)">
+    <input type="number" id="userAnswer" autocomplete="off" autofocus />
+    <button type="submit" id="submitBtn">Submit</button>
+  </form>
+
+  <div class="feedback" id="feedback"></div>
+</div>
+
+<!-- Section for Wrong Questions -->
+<div class="wrong-review-container" id="wrongReviewContainer">
+  <div class="wrong-review-title">❌ Missed Questions</div>
+  <div class="wrong-items-grid" id="wrongList"></div>
+</div>
+
+<script>
+  let score = 0;
+  let streak = 0;
+  let currentQuestion = null;
+  let timer = null;
+  let timeLeft = 20.0;
+  const timeLimit = 20.0;
+  let isPaused = false;
+  let isRoundActive = false;
+  const wrongQuestions = [];
+
+  let questionPool = [];
+  function initializePool() {
+    questionPool = [];
+    for (let a = 1; a <= 11; a++) {
+      for (let b = 1; b <= 11; b++) {
+        questionPool.push({ a, b });
+      }
+    }
+  }
+
+  function getNextProblem() {
+    if (questionPool.length === 0) return null;
+    const randomIndex = Math.floor(Math.random() * questionPool.length);
+    return questionPool.splice(randomIndex, 1)[0];
+  }
+
+  function updateRemainingDisplay() {
+    document.getElementById('remainingCount').textContent = questionPool.length + (currentQuestion ? 1 : 0);
+  }
+
+  function renderGrid(rows, cols) {
+    const grid = document.getElementById('boxGrid');
+    grid.innerHTML = '';
+    grid.style.gridTemplateColumns = `repeat(${cols}, 18px)`;
+
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const box = document.createElement('div');
+        box.className = 'box';
+        grid.appendChild(box);
+      }
+    }
+  }
+
+  function runTimerInterval() {
+    const bar = document.getElementById('timerBar');
+
+    timer = setInterval(() => {
+      timeLeft -= 0.05;
+      const pct = Math.max(0, (timeLeft / timeLimit) * 100);
+      bar.style.width = pct + '%';
+
+      if (timeLeft <= 1.8) {
+        bar.style.backgroundColor = '#ef4444';
+      } else if (timeLeft <= 3.2) {
+        bar.style.backgroundColor = '#f59e0b';
+      } else {
+        bar.style.backgroundColor = '#22c55e';
+      }
+
+      if (timeLeft <= 0) {
+        clearInterval(timer);
+        processSubmission(null, true);
+      }
+    }, 50);
+  }
+
+  function startTimer() {
+    clearInterval(timer);
+    timeLeft = timeLimit;
+    runTimerInterval();
+  }
+
+  function togglePause() {
+    if (!isRoundActive) return;
+
+    isPaused = !isPaused;
+    const pauseBtn = document.getElementById('pauseBtn');
+    const input = document.getElementById('userAnswer');
+    const submitBtn = document.getElementById('submitBtn');
+
+    if (isPaused) {
+      clearInterval(timer);
+      pauseBtn.textContent = '▶ Resume';
+      input.disabled = true;
+      submitBtn.disabled = true;
+    } else {
+      pauseBtn.textContent = '⏸ Pause';
+      input.disabled = false;
+      submitBtn.disabled = false;
+      input.focus();
+      runTimerInterval();
+    }
+  }
+
+  function loadNextQuestion() {
+    currentQuestion = getNextProblem();
+
+    if (!currentQuestion) {
+      endGame();
+      return;
+    }
+
+    updateRemainingDisplay();
+    isRoundActive = true;
+    isPaused = false;
+
+    const pauseBtn = document.getElementById('pauseBtn');
+    pauseBtn.disabled = false;
+    pauseBtn.textContent = '⏸ Pause';
+
+    document.getElementById('questionText').textContent = `${currentQuestion.a} × ${currentQuestion.b} = ?`;
+    renderGrid(currentQuestion.a, currentQuestion.b);
+
+    const input = document.getElementById('userAnswer');
+    input.value = '';
+    input.disabled = false;
+    document.getElementById('submitBtn').disabled = false;
+    input.focus();
+
+    startTimer();
+  }
+
+  function addWrongQuestion(a, b, expected) {
+    const container = document.getElementById('wrongReviewContainer');
+    const list = document.getElementById('wrongList');
+    
+    container.style.display = 'block';
+    
+    const badge = document.createElement('div');
+    badge.className = 'wrong-badge';
+    badge.textContent = `${a} × ${b} = ${expected}`;
+    list.appendChild(badge);
+  }
+
+  function processSubmission(ans, timedOut = false) {
+    isRoundActive = false;
+    clearInterval(timer);
+
+    const input = document.getElementById('userAnswer');
+    input.disabled = true;
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('pauseBtn').disabled = true;
+
+    const expected = currentQuestion.a * currentQuestion.b;
+    const feedback = document.getElementById('feedback');
+
+    if (!timedOut && ans === expected) {
+      score += 1;
+      streak += 1;
+      feedback.textContent = '🎉 Great job! That is correct!';
+      feedback.className = 'feedback correct';
+    } else {
+      streak = 0;
+      const reason = timedOut ? "⏰ Time's up!" : "❌ Not quite!";
+      feedback.textContent = `${reason} ${currentQuestion.a} × ${currentQuestion.b} = ${expected}.`;
+      feedback.className = 'feedback wrong';
+      
+      addWrongQuestion(currentQuestion.a, currentQuestion.b, expected);
+    }
+
+    document.getElementById('score').textContent = score;
+    document.getElementById('streak').textContent = streak;
+
+    setTimeout(() => {
+      feedback.textContent = '';
+      loadNextQuestion();
+    }, 1800);
+  }
+
+  function endGame() {
+    isRoundActive = false;
+    clearInterval(timer);
+    document.getElementById('questionText').textContent = '🏆 All Done!';
+    document.getElementById('boxGrid').innerHTML = '';
+    document.getElementById('userAnswer').disabled = true;
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('pauseBtn').disabled = true;
+    document.getElementById('remainingCount').textContent = '0';
+    
+    const feedback = document.getElementById('feedback');
+    feedback.className = 'feedback correct';
+    feedback.textContent = `You completed all 121 questions with a score of ${score}!`;
+  }
+
+  function handleAnswer(e) {
+    e.preventDefault();
+    if (isPaused || !isRoundActive) return;
+    const val = parseInt(document.getElementById('userAnswer').value, 10);
+    if (isNaN(val)) return;
+    processSubmission(val, false);
+  }
+
+  initializePool();
+  loadNextQuestion();
+</script>
+
+</body>
+</html>
