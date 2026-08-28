@@ -359,7 +359,7 @@
       feedback.textContent = '🎉 Great job! That is correct!';
       feedback.className = 'feedback correct';
     } else {
-      streak = 0;
+      streak = Math.max(0, streak - 5);
       const reason = timedOut ? "⏰ Time's up!" : "❌ Not quite!";
       feedback.textContent = `${reason} ${currentQuestion.a} × ${currentQuestion.b} = ${expected}.`;
       feedback.className = 'feedback wrong';
@@ -405,3 +405,4 @@
 
 </body>
 </html>
+```[cite: 1]
